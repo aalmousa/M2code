@@ -172,11 +172,18 @@ conjAD := (A) -> (
 	for j in S do (
 	    k_j := number(L, i-> i^j == vector toList (length j:1));
 	    );
-      
-      -*
+	    
+----------------------------------------------------------------------
+
+---------------------
+--**Demo of code**
+---------------------
+
+-*
 Start by making a ring. The number of variables you put in here
 doesn't actually matter since the function makes new rings, anyway.
 *-
+
 Q = ZZ/101[x_(1,1)..x_(3,4)];
 I = ideal(x_(1,1)*x_(1,2), x_(1,1)*x_(2,1))
 

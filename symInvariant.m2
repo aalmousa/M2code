@@ -1,5 +1,8 @@
+restart
+
 needsPackage "SimplicialComplexes"
 needsPackage "SimplicialDecomposability"
+needsPackage "Posets"
 
 --------------------------
 --Functions
@@ -88,6 +91,22 @@ exponentMatrix := (m,c,n,R) -> (
     matrix M
     )
 
+--input M, an integer matrix
+--outputs a monomial m with exponent matrix M
+expMatrixToMonomial := (M) -> (
+    c := numrows M;
+    n := numcols M;
+    Q := ZZ/101[x_(1,1)..x_(c,n)];
+    L := substitute(1,Q);
+    for i from 0 to n-1 do (
+	for j from 0 to c-1 do (
+	    L = L*x_(j+1,i+1)^(M_(j,i));
+	    );
+	);
+    L
+    )
+
+
 --mons a list of monomials, G a list of ring maps
 --returns a minimal subset orbits of mons such that G*orbits = Mons
 
@@ -172,7 +191,54 @@ conjAD := (A) -> (
 	for j in S do (
 	    k_j := number(L, i-> i^j == vector toList (length j:1));
 	    );
-	    
+	
+	
+--------------------------------
+--**Code for inequalities**
+--------------------------------	
+
+--input: S, a string of 0s and 1s
+--output: the complement of S
+
+comp := (S) -> (
+    concatenate apply(characters S, i->toString(mod((value i)+1,2)))
+    )
+
+--input:
+    --c: number of rows in generating matrices
+    --A = {aa^1..aa^k}
+    	--a list of lists aa^i in \NN^{2^[c]}
+	--each aa^i gives some k^i_S where S is a subset of [c]
+	--ordering of entries of aa^i is lexicographic, e.g.
+	    --000, 001, 010, 011, 100, 101, 110, 111
+	
+--output: a list of inequalities in a format that can be input into Sage
+c=2
+A = {{0,1,1,2},{1,2,2,0}}
+ADineqs:= (c,A) -> (
+    B := booleanLattice c;
+    G := B.GroundSet;
+    N := antichains B; -- if c=2, #N = 20
+    Js := toList (set N) ^** #A; --ugh if #A is 2, this is already 400
+    polyhedra = new MutableList;
+    
+    for J in Js do(
+        ineqs = new MutableList;
+        for i from 0 to #A-1 do (
+            P = flatten apply(J_i, j -> position(G, l-> l==j)); --positions of k's
+            K = sum((A_i)_P)+1; --sum of k's
+            comps = apply(J_i, j -> comp j); --complements list
+            Pc = flatten apply(comps, j -> position(G,l->l==j)); --positions of comps
+            V = new MutableList from 2^c:0;
+            for k from 0 to #Pc-1 do (V#(Pc_k) = -1);
+            ineqs#(#ineqs) = toSequence({K}|new List from V);
+            );
+        ineqString = toString ineqs;
+        polyhedra#(#polyhedra) = "Polyhedron(ieqs=["|substring(1,#ineqString-2)|"])";
+        );
+    toList polyhedra
+    )
+	
 ----------------------------------------------------------------------
 
 ---------------------
@@ -183,7 +249,6 @@ conjAD := (A) -> (
 Start by making a ring. The number of variables you put in here
 doesn't actually matter since the function makes new rings, anyway.
 *-
-
 Q = ZZ/101[x_(1,1)..x_(3,4)];
 I = ideal(x_(1,1)*x_(1,2), x_(1,1)*x_(2,1))
 
@@ -214,6 +279,205 @@ netList listDualGens(L,2,2)
 
 --find all facet orbits of the SR complex up to symmetry
 netList listFacetGens(L,2,2)
-	
-	
-	
+
+----------------------------
+--Example: 1 orbit
+----------------------------
+-*
+1 1 0      
+1 0 1 
+*-
+
+Q = ZZ/101[x_(1,1)..x_(2,3)];
+I = ideal(x_(1,1)*x_(1,2)*x_(2,1)*x_(2,3));
+L = (idealSym(I,2,3,5))/monomialIdeal;
+
+netList listDualGens(L,2,3)
+netList listFacetGens(L,2,3)
+
+------------------------------------
+--Examples: 2-orbits, coprime
+------------------------------------
+
+-*
+Simplest 2-orbit coprime case:
+
+1 1     0 0
+0 0 and 1 1
+
+*-
+
+Q = ZZ/101[x_(1,1)..x_(2,2)];
+I1 = ideal(x_(1,1)*x_(1,2));
+I2 = ideal(x_(2,1)*x_(2,2));
+I = I1 + I2
+L1 = (idealSym(I1,2,2,5))/monomialIdeal
+L2 = (idealSym(I2,2,2,5))/monomialIdeal
+L = (idealSym(I,2,2,5))/monomialIdeal
+
+--List the Alexander dual generators for L1, L2, and L
+netList {listDualGens(L1,2,2), listDualGens(L2,2,2), listDualGens(L,2,2)}
+-
+--List the facet orbit generators for L1, L2, and L
+netList {listFacetGens(L1,2,2), listFacetGens(L2,2,2), listFacetGens(L,2,2)}
+
+-------------------------------------------
+-- Still c=2, 2 coprime orbits
+-- What if the number of columns differs?
+-------------------------------------------
+
+-*
+
+1 1     0 0 0
+0 0 and 1 1 1
+
+*-
+
+Q = ZZ/101[x_(1,1)..x_(2,3)];
+I1 = ideal(x_(1,1)*x_(1,2));
+I2 = ideal(x_(2,1)*x_(2,2)*x_(2,3));
+I = I1 + I2;
+L1 = (idealSym(I1,2,3,6))/monomialIdeal;
+L2 = (idealSym(I2,2,3,6))/monomialIdeal;
+L = (idealSym(I,2,3,6))/monomialIdeal;
+
+
+netList {listDualGens(L1,2,3), listDualGens(L2,2,3), listDualGens(L,2,3)}
+netList {listFacetGens(L1,2,3), listFacetGens(L2,2,3), listFacetGens(L,2,3)}
+
+-*
+
+1 1     0 0 0 0
+0 0 and 1 1 1 1
+
+*-
+
+Q = ZZ/101[x_(1,1)..x_(2,4)];
+I1 = ideal(x_(1,1)*x_(1,2));
+I2 = ideal(x_(2,1)*x_(2,2)*x_(2,3)*x_(2,4));
+I = I1 + I2;
+L1 = (idealSym(I1,2,4,6))/monomialIdeal;
+L2 = (idealSym(I2,2,4,6))/monomialIdeal;
+L = (idealSym(I,2,4,6))/monomialIdeal;
+
+
+netList {listDualGens(L1,2,4), listDualGens(L2,2,4), listDualGens(L,2,4)}
+
+netList {listFacetGens(L1,2,4), listFacetGens(L2,2,4), listFacetGens(L,2,4)}
+
+
+
+
+------------------------------------
+
+-*
+
+1 1     0 0 0
+0 0 and 1 1 1
+
+*-
+
+Q = ZZ/101[x_(1,1)..x_(2,3)];
+I1 = ideal(x_(1,1)*x_(1,2));
+I2 = ideal(x_(2,1)*x_(2,2)*x_(2,3));
+I = I1 + I2;
+L1 = (idealSym(I1,2,3,6))/monomialIdeal;
+L2 = (idealSym(I2,2,3,6))/monomialIdeal;
+L = (idealSym(I,2,3,6))/monomialIdeal;
+
+
+netList {listDualGens(L1,2,3), listDualGens(L2,2,3), listDualGens(L,2,3)}
+netList {listFacetGens(L1,2,3), listFacetGens(L2,2,3), listFacetGens(L,2,3)}
+
+-*
+
+1 1 1     0 0 0 0
+0 0 0 and 1 1 1 1
+
+*-
+
+Q = ZZ/101[x_(1,1)..x_(2,4)];
+I1 = ideal(x_(1,1)*x_(1,2)*x_(1,3));
+I2 = ideal(x_(2,1)*x_(2,2)*x_(2,3)*x_(2,4));
+I = I1 + I2;
+L1 = (idealSym(I1,2,4,6))/monomialIdeal;
+L2 = (idealSym(I2,2,4,6))/monomialIdeal;
+L = (idealSym(I,2,4,6))/monomialIdeal;
+
+
+netList {listDualGens(L1,2,4), listDualGens(L2,2,4), listDualGens(L,2,4)}
+
+netList {listFacetGens(L1,2,4), listFacetGens(L2,2,4), listFacetGens(L,2,4)}
+
+
+-----------------------------------
+--A c=3, 2 coprime orbits example.
+-----------------------------------
+-*
+
+1 1       0 0
+0 0  and  1 1
+0 0       1 1
+
+*-
+
+Q = ZZ/101[x_(1,1)..x_(3,2)];
+I1 = ideal(x_(1,1)*x_(1,2));
+I2 = ideal(x_(2,1)*x_(2,2)*x_(3,1)*x_(3,2));
+I = I1 + I2;
+L1 = (idealSym(I1,3,2,5))/monomialIdeal;
+L2 = (idealSym(I2,3,2,5))/monomialIdeal;
+L = (idealSym(I,3,2,5))/monomialIdeal;
+
+
+netList {listDualGens(L1,3,2), listDualGens(L2,3,2), listDualGens(L,3,2)}
+
+netList {listFacetGens(L1,3,2), listFacetGens(L2,3,2), listFacetGens(L,3,2)}
+
+
+-*
+
+1 1      0 0 1
+1 0  and 1 1 1
+1 0      1 1 0
+
+*-
+
+Q = ZZ/101[x_(1,1)..x_(3,3)];
+I1 = ideal(x_(1,1)*x_(1,2)*x_(2,1)*x_(3,1));
+I2 = ideal(x_(1,3)*x_(2,1)*x_(2,2)*x_(2,3)*x_(3,1)*x_(3,2));
+I = I1 + I2;
+L1 = (idealSym(I1,3,3,5))/monomialIdeal;
+L2 = (idealSym(I2,3,3,5))/monomialIdeal;
+L = (idealSym(I,3,3,5))/monomialIdeal;
+
+
+netList {listDualGens(L1,3,3), listDualGens(L2,3,3), listDualGens(L,3,3)}
+
+netList {listFacetGens(L1,3,2), listFacetGens(L2,3,2), listFacetGens(L,3,2)}
+
+-*
+1 1 1 1 1 0 0 1 0 0
+1 1 1 1 0 1 1 0 1 0
+1 1 0 0 1 1 1 0 0 1
+
+and
+
+1 1 1 1 0 1 1 0 0 0 0
+1 1 0 0 1 0 0 1 1 0 0
+1 0 1 1 1 0 0 0 0 1 1
+
+*-
+
+M1 = matrix{{1,1,1,1,1,0,0,1,0,0},{1,1,1,1,0,1,1,0,1,0},{1,1,0,0,1,1,1,0,0,1}};
+m1 = expMatrixToMonomial(M1)
+M2 = matrix{{1,1,1,1,0,1,1,0,0,0,0},{1,1,0,0,1,0,0,1,1,0,0},{1,0,1,1,1,0,0,0,0,1,1}};
+m2 = expMatrixToMonomial(M2)
+m1 = sub(m1,ring m2)
+I1 = ideal m1;
+I2 = ideal m2;
+I = I1 + I2;
+L = (idealSym(I,3,11,11))
+
+---------------
+

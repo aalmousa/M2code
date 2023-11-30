@@ -285,15 +285,18 @@ netList listFacetGens(L,2,2)
 ----------------------------
 -*
 1 1 0      
-1 0 1 
+1 0 1
+0 1 1 
 *-
 
-Q = ZZ/101[x_(1,1)..x_(2,3)];
-I = ideal(x_(1,1)*x_(1,2)*x_(2,1)*x_(2,3));
-L = (idealSym(I,2,3,5))/monomialIdeal;
+Q = ZZ/101[x_(1,1)..x_(3,3)];
+I = ideal(x_(1,1)*x_(1,2)*x_(2,1)*x_(2,3)*x_(3,2)*x_(3,3));
+L = (idealSym(I,3,3,6))/monomialIdeal;
 
-netList listDualGens(L,2,3)
-netList listFacetGens(L,2,3)
+netList listDualGens(L,3,3)
+
+apply(listDualGens(L,3,3), i-> #i)
+netList listFacetGens(L,3,3)
 
 ------------------------------------
 --Examples: 2-orbits, coprime
@@ -314,6 +317,8 @@ I = I1 + I2
 L1 = (idealSym(I1,2,2,5))/monomialIdeal
 L2 = (idealSym(I2,2,2,5))/monomialIdeal
 L = (idealSym(I,2,2,5))/monomialIdeal
+
+apply(listDualGens(L,2,2), i-> #i)
 
 --List the Alexander dual generators for L1, L2, and L
 netList {listDualGens(L1,2,2), listDualGens(L2,2,2), listDualGens(L,2,2)}
@@ -451,6 +456,7 @@ L1 = (idealSym(I1,3,3,5))/monomialIdeal;
 L2 = (idealSym(I2,3,3,5))/monomialIdeal;
 L = (idealSym(I,3,3,5))/monomialIdeal;
 
+apply(listDualGens(L,3,3), i-> #i)
 
 netList {listDualGens(L1,3,3), listDualGens(L2,3,3), listDualGens(L,3,3)}
 

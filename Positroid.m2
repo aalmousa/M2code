@@ -27,7 +27,8 @@ export{
     "basicPositroidVariety",	    	 -- NOT DOCUMENTED
     "leadTermBasicPositroid",	     	 -- NOT DOCUMENTED
     "leadTermBasicPositroidWrapAround",	 -- NOT DOCUMENTED
-    "hodgeDegenerationBasicPositroid"	 -- NOT DOCUMENTED
+    "hodgeDegenerationBasicPositroid",	 -- NOT DOCUMENTED
+    "getMultidegree"	    	    	 -- NOT DOCUMENTED
 }
     
 ------------------------------------------------------------------------------
@@ -246,13 +247,14 @@ hodgeDegenerationBasicPositroid(ZZ,ZZ,List,ZZ) := o -> (k,n,L,r) -> (
     if any(L, i-> i==1) and any(L, i-> i==n) then (
 	tabs := leadTermBasicPositroidWrapAround(k,n,L,r);
 	)
-    else (tabs := leadTermBasicPositroid(k,n,L,r));
+    else (tabs = leadTermBasicPositroid(k,n,L,r));
     ideal apply(tabs, tab -> product(apply(entries tab, i -> varHash#i)))
     );
 
 getMultidegree = method();
 
 getMultidegree(MonomialIdeal) := I -> (
+    t := symbol t;
     R := ring I;
     varList := R_*;
     n := last last baseName varList#(#varList-1);
@@ -339,6 +341,7 @@ end---------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 
+I = 
 
 ---------------------
 --Ayah's sandbox
@@ -347,6 +350,7 @@ end---------------------------------------------------------------------------
 I1 = hodgeDegenerationBasicPositroid(3,6,{5,6,1,2,3},2);
 I2 = sub(hodgeDegenerationBasicPositroid(3,6,{1,2},1),ring I1);
 I = I1+I2;
+getMultidegree monomialIdeal I
 codim I
 
 J2 = sub(hodgeDegenerationBasicPositroid(3,6,{6,1,2},1),ring I1);

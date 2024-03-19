@@ -24,7 +24,8 @@ export{
 "listLaplacians",    	     	     --documented
 "invariantFactors",    	     	     --docmented ++
 "shiftedComplex",	      	     --documented ++
-"reducedLaplacianShifted"    	     --documented ++
+"reducedLaplacianShifted",    	     --documented ++
+"galePoset"
 }
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
@@ -335,13 +336,24 @@ invariantFactors D
 
 EXAMPLE \\\
 --using the reducedLaplacianShifted function
-L = {{2,4,6,7}};
+L = {{2,4,5}};
 reducedLaplacianShifted L
 (smithNormalForm oo)_0
 tally invariantFactors shiftedComplex L
 \\\
 
 
+------------------------------
+--Ayah's sandbox
+------------------------------
+L = apply(subsets(9,3), i-> i+{1,1,1});
+IFs = apply(L, i-> tally invariantFactors shiftedComplex {i});
+netList transpose{L, IFs}
+
+apply(6, i-> reducedLaplacianShifted {toList 1..i})
+reducedLaplacianShifted {{1,2}}
+
+reducedLaplacianShifted {{2,3,4}}
 ------------------------------------
 --Development Section
 ------------------------------------
